@@ -12,7 +12,7 @@ permissions:
 
 concurrency:
   group: github-pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   deploy:
@@ -25,10 +25,16 @@ jobs:
         uses: actions/checkout@v4
       - name: Configure Pages
         uses: actions/configure-pages@v5
+      - name: Prepare site artifact
+        run: |
+          mkdir _site
+          cp index.html favicon.ico .nojekyll _site/
+          cp -R plantuml-wasm playground _site/
+          echo "window.GIT_COMMIT=\"${{ github.sha }}; deploy time $(date -u +'%Y-%m-%dT%H:%M:%SZ')\";" > _site/LAST_COMMIT.js
       - name: Upload site artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: _site
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
