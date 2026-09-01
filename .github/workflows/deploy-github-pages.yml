@@ -26,11 +26,13 @@ jobs:
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Prepare site artifact
+        env:
+          GIT_SHA: ${{ github.sha }}
         run: |
           mkdir _site
           cp index.html favicon.ico .nojekyll _site/
           cp -R plantuml-wasm playground _site/
-          echo "window.GIT_COMMIT=\"${{ github.sha }}; deploy time $(date -u +'%Y-%m-%dT%H:%M:%SZ')\";" > _site/LAST_COMMIT.js
+          printf 'window.GIT_COMMIT="%s";\nwindow.DEPLOY_TIME="%s";\n' "$GIT_SHA" "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" > _site/LAST_COMMIT.js
       - name: Upload site artifact
         uses: actions/upload-pages-artifact@v3
         with:
