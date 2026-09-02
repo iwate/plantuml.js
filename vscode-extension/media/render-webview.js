@@ -18,7 +18,7 @@
 
   function ensureInitialized () {
     if (!initPromise) {
-      initPromise = loadScript(cheerpjLoaderUrl).then(() => window.plantuml.initialize(assetsBaseUrl))
+      initPromise = loadScript(cheerpjLoaderUrl).then(() => plantuml.initialize(assetsBaseUrl))
     }
     return initPromise
   }
@@ -35,7 +35,7 @@
   async function renderOne (hash, source) {
     try {
       await ensureInitialized()
-      const blob = await window.plantuml.renderPng(source)
+      const blob = await plantuml.renderPng(source)
       const dataUri = await blobToDataUri(blob)
       vscode.postMessage({ type: 'result', hash, dataUri })
     } catch (error) {
