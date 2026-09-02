@@ -1,0 +1,22 @@
+.plantuml-diagram {
+  margin: 1em 0;
+  text-align: center;
+}
+
+.plantuml-diagram img {
+  max-width: 100%;
+}
+
+.plantuml-diagram-pending {
+  color: var(--vscode-descriptionForeground);
+  font-style: italic;
+}
+
+.plantuml-diagram-error {
+  text-align: left;
+  color: var(--vscode-errorForeground);
+}
+
+.plantuml-diagram-error pre {
+  white-space: pre-wrap;
+}
