@@ -1,0 +1,58 @@
+{
+  "name": "plantuml-markdown-preview",
+  "displayName": "PlantUML Markdown Preview",
+  "description": "Renders ```plantuml code fences in the VS Code Markdown preview using plantuml.js (CheerpJ based, runs entirely client-side, no Java/server required).",
+  "version": "0.1.0",
+  "publisher": "iwate",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "plantuml",
+    "markdown",
+    "uml",
+    "diagram",
+    "preview"
+  ],
+  "activationEvents": [
+    "onLanguage:markdown"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "markdown.markdownItPlugins": true,
+    "markdown.previewStyles": [
+      "./media/plantuml-preview.css"
+    ],
+    "configuration": {
+      "title": "PlantUML Markdown Preview",
+      "properties": {
+        "plantumlMarkdownPreview.assetsBaseUrl": {
+          "type": "string",
+          "default": "https://cdn.jsdelivr.net/npm/@sakirtemel/plantuml.js@1.0.1",
+          "description": "Base URL used to load the plantuml.js runtime assets (jar files, fonts, stdlib) served through CheerpJ."
+        },
+        "plantumlMarkdownPreview.cheerpjLoaderUrl": {
+          "type": "string",
+          "default": "https://cjrtnc.leaningtech.com/2.3/loader.js",
+          "description": "URL of the CheerpJ loader script used to run plantuml.js in the background renderer."
+        }
+      }
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iwate/plantuml.js.git"
+  },
+  "scripts": {
+    "copy-vendor": "node ./scripts/copy-vendor.js",
+    "vscode:prepublish": "npm run copy-vendor",
+    "package": "npm run copy-vendor && vsce package"
+  },
+  "devDependencies": {
+    "@vscode/vsce": "^2.32.0"
+  }
+}

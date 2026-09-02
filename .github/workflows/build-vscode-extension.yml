@@ -1,0 +1,54 @@
+name: Build and Release VS Code Extension
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version for the VSIX and GitHub Release (e.g. 0.1.0). Defaults to the version in vscode-extension/package.json.'
+        required: false
+      prerelease:
+        description: 'Mark the GitHub Release as a pre-release'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: vscode-extension
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+
+      - name: Set package version
+        if: ${{ github.event.inputs.version != '' }}
+        run: npm version "${{ github.event.inputs.version }}" --no-git-tag-version --allow-same-version
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Resolve version
+        id: version
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Package extension
+        run: npm run package -- -o plantuml-markdown-preview-${{ steps.version.outputs.version }}.vsix
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: vscode-ext-v${{ steps.version.outputs.version }}
+          name: PlantUML Markdown Preview v${{ steps.version.outputs.version }}
+          prerelease: ${{ github.event.inputs.prerelease == 'true' }}
+          files: vscode-extension/plantuml-markdown-preview-${{ steps.version.outputs.version }}.vsix
