@@ -49,8 +49,11 @@ in-memory cache.
 ## Extension Settings
 
 - `plantumlMarkdownPreview.assetsBaseUrl`: base URL used to load the
-  plantuml.js runtime assets (jar files, fonts, stdlib). Defaults to the
-  `@sakirtemel/plantuml.js` package on jsDelivr.
+  plantuml.js runtime assets (jar files, fonts, stdlib). Defaults to this
+  repository's own GitHub Pages build
+  (`https://iwate.github.io/plantuml.js/plantuml-wasm`), which is kept in
+  sync with the `plantuml-wasm/` sources in this repo (including CJK font
+  support). Override this if you build and host the assets yourself.
 - `plantumlMarkdownPreview.cheerpjLoaderUrl`: URL of the CheerpJ loader
   script. Defaults to the official CheerpJ CDN loader.
 

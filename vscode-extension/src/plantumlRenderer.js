@@ -3,6 +3,12 @@
 const vscode = require('vscode')
 const crypto = require('crypto')
 
+// If a render doesn't complete within this time (e.g. the CheerpJ runtime
+// fails to boot because the configured assetsBaseUrl is unreachable or
+// serves incompatible assets), surface an error instead of leaving the
+// preview stuck on "Rendering PlantUML diagram…" forever.
+const RENDER_TIMEOUT_MS = 60000
+
 /**
  * Manages a hidden helper webview panel that runs plantuml.js (CheerpJ based)
  * to render PlantUML sources to PNG, and caches the results so the
@@ -19,6 +25,8 @@ class PlantumlRenderer {
     this.pendingQueue = []
     /** @type {Map<string, {status: 'pending'|'done'|'error', dataUri?: string, error?: string}>} */
     this.cache = new Map()
+    /** @type {Map<string, NodeJS.Timeout>} */
+    this.timeouts = new Map()
     this.messageListener = undefined
   }
 
@@ -33,7 +41,7 @@ class PlantumlRenderer {
   getConfig () {
     const config = vscode.workspace.getConfiguration('plantumlMarkdownPreview')
     return {
-      assetsBaseUrl: config.get('assetsBaseUrl', 'https://cdn.jsdelivr.net/npm/@sakirtemel/plantuml.js@1.0.1'),
+      assetsBaseUrl: config.get('assetsBaseUrl', 'https://iwate.github.io/plantuml.js/plantuml-wasm'),
       cheerpjLoaderUrl: config.get('cheerpjLoaderUrl', 'https://cjrtnc.leaningtech.com/2.3/loader.js')
     }
   }
@@ -51,6 +59,22 @@ class PlantumlRenderer {
 
     this.cache.set(hash, { status: 'pending' })
     this._send({ type: 'render', hash, source })
+
+    const timeout = setTimeout(() => {
+      this.timeouts.delete(hash)
+      if (this.cache.get(hash)?.status === 'pending') {
+        this.cache.set(hash, {
+          status: 'error',
+          error: 'Timed out waiting for the PlantUML renderer. Check the ' +
+            '"plantumlMarkdownPreview.assetsBaseUrl" and ' +
+            '"plantumlMarkdownPreview.cheerpjLoaderUrl" settings and your ' +
+            'internet connection, then re-open the preview to retry.'
+        })
+        vscode.commands.executeCommand('markdown.preview.refresh')
+      }
+    }, RENDER_TIMEOUT_MS)
+    this.timeouts.set(hash, timeout)
+
     return hash
   }
 
@@ -147,14 +171,24 @@ class PlantumlRenderer {
     }
 
     if (message.type === 'result') {
+      this._clearTimeout(message.hash)
       this.cache.set(message.hash, { status: 'done', dataUri: message.dataUri })
       vscode.commands.executeCommand('markdown.preview.refresh')
       return
     }
 
     if (message.type === 'error') {
+      this._clearTimeout(message.hash)
       this.cache.set(message.hash, { status: 'error', error: message.error })
       vscode.commands.executeCommand('markdown.preview.refresh')
+    }
+  }
+
+  _clearTimeout (hash) {
+    const timeout = this.timeouts.get(hash)
+    if (timeout) {
+      clearTimeout(timeout)
+      this.timeouts.delete(hash)
     }
   }
 
@@ -165,6 +199,10 @@ class PlantumlRenderer {
     if (this.panel) {
       this.panel.dispose()
     }
+    for (const timeout of this.timeouts.values()) {
+      clearTimeout(timeout)
+    }
+    this.timeouts.clear()
   }
 }
 
