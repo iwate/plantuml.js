@@ -148,7 +148,7 @@ class PlantumlRenderer {
       `img-src ${webview.cspSource} https: data: blob:`,
       `script-src ${webview.cspSource} https: 'unsafe-inline'`,
       "connect-src https: data: blob:",
-      `style-src ${webview.cspSource} 'unsafe-inline'`,
+      `style-src ${webview.cspSource} https: 'unsafe-inline'`,
       `font-src ${webview.cspSource} https: data:`,
       "worker-src blob: https:"
     ].join('; ')
