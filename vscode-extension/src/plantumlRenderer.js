@@ -7,7 +7,14 @@ const crypto = require('crypto')
 // fails to boot because the configured assetsBaseUrl is unreachable or
 // serves incompatible assets), surface an error instead of leaving the
 // preview stuck on "Rendering PlantUML diagram…" forever.
-const RENDER_TIMEOUT_MS = 60000
+//
+// The very first render also has to download the CheerpJ JVM runtime plus
+// the PlantUML jar/font assets (tens of megabytes), which can legitimately
+// take well over a minute on a normal (but not particularly fast) internet
+// connection. A short timeout here mislabels a slow-but-working load as a
+// network error, so default to a more generous value and let users tune it
+// via the `plantumlMarkdownPreview.renderTimeoutMs` setting.
+const DEFAULT_RENDER_TIMEOUT_MS = 180000
 
 /**
  * Manages a hidden helper webview panel that runs plantuml.js (CheerpJ based)
@@ -42,7 +49,8 @@ class PlantumlRenderer {
     const config = vscode.workspace.getConfiguration('plantumlMarkdownPreview')
     return {
       assetsBaseUrl: config.get('assetsBaseUrl', 'https://iwate.github.io/plantuml.js/plantuml-wasm'),
-      cheerpjLoaderUrl: config.get('cheerpjLoaderUrl', 'https://cjrtnc.leaningtech.com/2.3/loader.js')
+      cheerpjLoaderUrl: config.get('cheerpjLoaderUrl', 'https://cjrtnc.leaningtech.com/2.3/loader.js'),
+      renderTimeoutMs: config.get('renderTimeoutMs', DEFAULT_RENDER_TIMEOUT_MS)
     }
   }
 
@@ -60,19 +68,25 @@ class PlantumlRenderer {
     this.cache.set(hash, { status: 'pending' })
     this._send({ type: 'render', hash, source })
 
+    const { renderTimeoutMs } = this.getConfig()
     const timeout = setTimeout(() => {
       this.timeouts.delete(hash)
       if (this.cache.get(hash)?.status === 'pending') {
         this.cache.set(hash, {
           status: 'error',
-          error: 'Timed out waiting for the PlantUML renderer. Check the ' +
+          error: 'Timed out waiting for the PlantUML renderer. The first ' +
+            'render downloads the CheerpJ runtime and PlantUML assets ' +
+            '(tens of megabytes), which can take a while on a slow ' +
+            'connection — try increasing ' +
+            '"plantumlMarkdownPreview.renderTimeoutMs" and re-opening the ' +
+            'preview to retry. If it still fails, check the ' +
             '"plantumlMarkdownPreview.assetsBaseUrl" and ' +
             '"plantumlMarkdownPreview.cheerpjLoaderUrl" settings and your ' +
-            'internet connection, then re-open the preview to retry.'
+            'internet connection.'
         })
         vscode.commands.executeCommand('markdown.preview.refresh')
       }
-    }, RENDER_TIMEOUT_MS)
+    }, renderTimeoutMs)
     this.timeouts.set(hash, timeout)
 
     return hash
@@ -134,7 +148,7 @@ class PlantumlRenderer {
       `img-src ${webview.cspSource} https: data: blob:`,
       `script-src ${webview.cspSource} https: 'unsafe-inline'`,
       "connect-src https: data: blob:",
-      `style-src ${webview.cspSource} 'unsafe-inline'`,
+      `style-src ${webview.cspSource} https: 'unsafe-inline'`,
       `font-src ${webview.cspSource} https: data:`,
       "worker-src blob: https:"
     ].join('; ')

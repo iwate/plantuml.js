@@ -39,6 +39,11 @@
           "type": "string",
           "default": "https://cjrtnc.leaningtech.com/2.3/loader.js",
           "description": "URL of the CheerpJ loader script used to run plantuml.js in the background renderer."
+        },
+        "plantumlMarkdownPreview.renderTimeoutMs": {
+          "type": "number",
+          "default": 180000,
+          "description": "How long, in milliseconds, to wait for a diagram to render before showing a timeout error. The first render also downloads the CheerpJ runtime and PlantUML assets (tens of megabytes), which can take longer than the default on a slow connection; increase this value if you see timeout errors despite having a working internet connection."
         }
       }
     }

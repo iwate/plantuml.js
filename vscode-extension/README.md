@@ -44,7 +44,9 @@ in-memory cache.
 - Internet access, since plantuml.js loads the CheerpJ runtime and PlantUML
   jar/font/stdlib assets from a CDN at render time (no local Java install is
   required).
-- The first render can take a few seconds while the CheerpJ JVM starts up.
+- The first render downloads the CheerpJ runtime and PlantUML assets (tens
+  of megabytes) before the JVM starts up, so it can take from a few seconds
+  up to a couple of minutes depending on your connection speed.
 
 ## Extension Settings
 
@@ -56,6 +58,13 @@ in-memory cache.
   support). Override this if you build and host the assets yourself.
 - `plantumlMarkdownPreview.cheerpjLoaderUrl`: URL of the CheerpJ loader
   script. Defaults to the official CheerpJ CDN loader.
+- `plantumlMarkdownPreview.renderTimeoutMs`: how long, in milliseconds, to
+  wait for a diagram to render before showing a timeout error. Defaults to
+  `180000` (3 minutes). The first render downloads the CheerpJ runtime and
+  PlantUML assets (tens of megabytes), which can legitimately take longer
+  than a minute on a slower internet connection — if you see a "Timed out
+  waiting for the PlantUML renderer" error despite having a working
+  connection, try raising this value.
 
 ## Building
 
