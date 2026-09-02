@@ -32,8 +32,8 @@
       "properties": {
         "plantumlMarkdownPreview.assetsBaseUrl": {
           "type": "string",
-          "default": "https://cdn.jsdelivr.net/npm/@sakirtemel/plantuml.js@1.0.1",
-          "description": "Base URL used to load the plantuml.js runtime assets (jar files, fonts, stdlib) served through CheerpJ."
+          "default": "https://iwate.github.io/plantuml.js/plantuml-wasm",
+          "description": "Base URL used to load the plantuml.js runtime assets (jar files, fonts, stdlib) served through CheerpJ. Defaults to this repository's own GitHub Pages build."
         },
         "plantumlMarkdownPreview.cheerpjLoaderUrl": {
           "type": "string",
